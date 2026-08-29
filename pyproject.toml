@@ -13,7 +13,7 @@ dependencies = [
     "numpy==1.26.4",
     "matplotlib==3.8.4",
     "scikit-learn==1.4.2",
-    "tqdm==4.66.4",
+    "tqdm==4.70.0",
 ]
 
 [project.scripts]
