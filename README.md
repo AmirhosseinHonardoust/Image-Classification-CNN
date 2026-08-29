@@ -365,7 +365,7 @@ Evaluation runs on the standard MNIST test split, held out from training.
 
 | Confusion Matrix | Training Curves |
 |---|---|
-| ![Confusion matrix](https://private-user-images.githubusercontent.com/88084572/488351239-effd44e9-02a9-4cd3-879e-a19fa46393d3.png) | ![Training curves](https://private-user-images.githubusercontent.com/88084572/488351505-73e60a0b-bfb5-4c6d-94d9-c4e1afab1ddb.png) |
+| <img width="760" height="760" alt="confusion_matrix" src="https://github.com/user-attachments/assets/516b6152-7cda-4f44-b2dc-89a3f8565677" /> | <img width="1120" height="800" alt="training_curves" src="https://github.com/user-attachments/assets/2cf61fd1-e025-4b05-8cdb-75d6db5ce0a4" /> |
 | **Analysis:** The confusion matrix shows which digits the model confuses most often on the test set. Even at 99%+ accuracy, the per-class view highlights the handful of visually similar digit pairs that remain hardest. | **Analysis:** The training curves show loss and accuracy across epochs for both the training and validation sets, making it easy to see where early stopping triggered. |
 
 </div>
@@ -373,10 +373,11 @@ Evaluation runs on the standard MNIST test split, held out from training.
 ### Sample predictions
 
 <div align="center">
-
-![Sample predictions](https://private-user-images.githubusercontent.com/88084572/488351627-7978af96-6c5c-4ec9-a486-7fd5387e9e24.png)
-
-The sample-predictions grid shows a batch of test digits alongside the model's predicted labels, giving a quick qualitative sanity check beyond the aggregate metrics.
+        
+|Sample predictions|
+|---|
+| <img width="480" height="480" alt="sample_predictions" src="https://github.com/user-attachments/assets/77eb3e98-044c-4973-9125-2fffec5b2405" /> |   
+|The sample-predictions grid shows a batch of test digits alongside the model's predicted labels, giving a quick qualitative sanity check beyond the aggregate metrics.|
 
 </div>
 
