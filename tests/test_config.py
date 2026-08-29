@@ -12,6 +12,7 @@ def test_train_config_defaults_match_original_argparse_defaults():
     assert cfg.lr == 1e-3
     assert cfg.outdir == "outputs"
     assert cfg.patience == 3
+    assert cfg.num_workers == 2
 
 
 @pytest.mark.parametrize(
@@ -23,6 +24,7 @@ def test_train_config_defaults_match_original_argparse_defaults():
         {"lr": 0.0},
         {"lr": -1.0},
         {"patience": 0},
+        {"num_workers": -1},
     ],
 )
 def test_train_config_rejects_invalid_values(kwargs):

@@ -25,6 +25,7 @@ class TrainConfig:
     lr: float = 1e-3
     outdir: str = "outputs"
     patience: int = 3
+    num_workers: int = 2
 
     def __post_init__(self) -> None:
         if self.dataset.lower() not in VALID_DATASETS:
@@ -37,6 +38,8 @@ class TrainConfig:
             raise ValueError(f"lr must be > 0, got {self.lr}")
         if self.patience < 1:
             raise ValueError(f"patience must be >= 1, got {self.patience}")
+        if self.num_workers < 0:
+            raise ValueError(f"num_workers must be >= 0, got {self.num_workers}")
 
 
 @dataclass
@@ -45,6 +48,7 @@ class EvalConfig:
     dataset: str = "mnist"
     batch_size: int = 128
     outdir: str = "outputs"
+    num_workers: int = 2
 
     def __post_init__(self) -> None:
         if not self.model:
@@ -53,6 +57,8 @@ class EvalConfig:
             raise ValueError(f"dataset must be one of {VALID_DATASETS}, got {self.dataset!r}")
         if self.batch_size < 1:
             raise ValueError(f"batch_size must be >= 1, got {self.batch_size}")
+        if self.num_workers < 0:
+            raise ValueError(f"num_workers must be >= 0, got {self.num_workers}")
 
 
 def load_config_file(path: str | None) -> dict[str, Any]:

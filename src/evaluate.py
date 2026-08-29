@@ -5,18 +5,20 @@ import sys
 
 import torch
 import torch.nn as nn
+from class_names import CIFAR10_CLASSES
 from config import EvalConfig, load_config_file
 from model import SimpleCNN
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
-from train_cnn import CIFAR10_CLASSES
 from utils import data_root, device_select, plot_confusion, setup_logging
 
 logger = setup_logging()
 
 
-def get_test_loader(dataset: str, batch_size: int) -> tuple[DataLoader, int, list[str]]:
+def get_test_loader(
+    dataset: str, batch_size: int, num_workers: int = 2
+) -> tuple[DataLoader, int, list[str]]:
     """Build the test DataLoader for the given dataset ('mnist' or 'cifar10').
 
     Returns (loader, in_channels, class_names).
@@ -32,7 +34,9 @@ def get_test_loader(dataset: str, batch_size: int) -> tuple[DataLoader, int, lis
         in_ch, classes = 3, CIFAR10_CLASSES
     else:
         raise ValueError("dataset must be 'mnist' or 'cifar10'")
-    loader = DataLoader(ds, batch_size=batch_size, shuffle=False, num_workers=2, pin_memory=True)
+    loader = DataLoader(
+        ds, batch_size=batch_size, shuffle=False, num_workers=num_workers, pin_memory=True
+    )
     return loader, in_ch, classes
 
 
@@ -84,6 +88,11 @@ def build_config(args: argparse.Namespace) -> EvalConfig:
             else file_values.get("batch_size", defaults.batch_size)
         ),
         outdir=args.outdir or file_values.get("outdir", defaults.outdir),
+        num_workers=(
+            args.num_workers
+            if args.num_workers is not None
+            else file_values.get("num_workers", defaults.num_workers)
+        ),
     )
 
 
@@ -96,6 +105,9 @@ def main() -> None:
     ap.add_argument("--dataset", type=str, default=None, choices=["mnist", "cifar10"])
     ap.add_argument("--batch-size", type=int, default=None)
     ap.add_argument("--outdir", type=str, default=None)
+    ap.add_argument(
+        "--num-workers", type=int, default=None, help="DataLoader worker processes (default: 2)"
+    )
     args = ap.parse_args()
 
     try:
@@ -107,7 +119,7 @@ def main() -> None:
     os.makedirs(cfg.outdir, exist_ok=True)
     device = device_select()
 
-    loader, in_ch, classes = get_test_loader(cfg.dataset, cfg.batch_size)
+    loader, in_ch, classes = get_test_loader(cfg.dataset, cfg.batch_size, cfg.num_workers)
     model = SimpleCNN(in_ch=in_ch, n_classes=len(classes)).to(device)
     state = torch.load(cfg.model, map_location=device, weights_only=True)
     model.load_state_dict(

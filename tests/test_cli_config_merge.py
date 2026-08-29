@@ -16,6 +16,7 @@ def _train_args(**overrides):
         "lr": None,
         "outdir": None,
         "patience": None,
+        "num_workers": None,
     }
     base.update(overrides)
     return argparse.Namespace(**base)
@@ -48,8 +49,22 @@ def test_train_build_config_cli_beats_file(tmp_path):
     assert cfg.epochs == 99  # explicit CLI flag wins over the config file
 
 
+def test_train_build_config_num_workers_cli_beats_file(tmp_path):
+    config_path = tmp_path / "cfg.json"
+    config_path.write_text(json.dumps({"num_workers": 4}))
+    cfg = train_cnn.build_config(_train_args(config=str(config_path), num_workers=0))
+    assert cfg.num_workers == 0
+
+
 def _eval_args(**overrides):
-    base = {"config": None, "model": None, "dataset": None, "batch_size": None, "outdir": None}
+    base = {
+        "config": None,
+        "model": None,
+        "dataset": None,
+        "batch_size": None,
+        "outdir": None,
+        "num_workers": None,
+    }
     base.update(overrides)
     return argparse.Namespace(**base)
 
