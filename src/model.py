@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 
 
@@ -28,5 +29,5 @@ class SimpleCNN(nn.Module):
             nn.Linear(128, n_classes),
         )
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.classifier(self.features(x))

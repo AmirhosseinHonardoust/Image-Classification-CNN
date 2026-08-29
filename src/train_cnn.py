@@ -6,6 +6,7 @@ import sys
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from class_names import CIFAR10_CLASSES
 from config import TrainConfig, load_config_file
 from model import SimpleCNN
 from torch.utils.data import DataLoader
@@ -15,21 +16,10 @@ from utils import data_root, device_select, plot_curves, save_sample_predictions
 
 logger = setup_logging()
 
-CIFAR10_CLASSES = [
-    "airplane",
-    "automobile",
-    "bird",
-    "cat",
-    "deer",
-    "dog",
-    "frog",
-    "horse",
-    "ship",
-    "truck",
-]
 
-
-def get_data(dataset: str, batch_size: int) -> tuple[DataLoader, DataLoader, int, int, list[str]]:
+def get_data(
+    dataset: str, batch_size: int, num_workers: int = 2
+) -> tuple[DataLoader, DataLoader, int, int, list[str]]:
     """Build train/val DataLoaders for the given dataset ('mnist' or 'cifar10').
 
     Returns (train_loader, val_loader, in_channels, n_classes, class_names).
@@ -60,10 +50,10 @@ def get_data(dataset: str, batch_size: int) -> tuple[DataLoader, DataLoader, int
     else:
         raise ValueError("dataset must be 'mnist' or 'cifar10'")
     train_loader = DataLoader(
-        train_ds, batch_size=batch_size, shuffle=True, num_workers=2, pin_memory=True
+        train_ds, batch_size=batch_size, shuffle=True, num_workers=num_workers, pin_memory=True
     )
     val_loader = DataLoader(
-        test_ds, batch_size=batch_size, shuffle=False, num_workers=2, pin_memory=True
+        test_ds, batch_size=batch_size, shuffle=False, num_workers=num_workers, pin_memory=True
     )
     classes = (
         CIFAR10_CLASSES if dataset.lower() == "cifar10" else [str(i) for i in range(n_classes)]
@@ -210,6 +200,11 @@ def build_config(args: argparse.Namespace) -> TrainConfig:
             if args.patience is not None
             else file_values.get("patience", defaults.patience)
         ),
+        num_workers=(
+            args.num_workers
+            if args.num_workers is not None
+            else file_values.get("num_workers", defaults.num_workers)
+        ),
     )
 
 
@@ -224,6 +219,9 @@ def main() -> None:
     ap.add_argument("--lr", type=float, default=None)
     ap.add_argument("--outdir", type=str, default=None)
     ap.add_argument("--patience", type=int, default=None, help="Early-stopping patience (epochs)")
+    ap.add_argument(
+        "--num-workers", type=int, default=None, help="DataLoader worker processes (default: 2)"
+    )
     args = ap.parse_args()
 
     try:
@@ -234,7 +232,9 @@ def main() -> None:
 
     os.makedirs(cfg.outdir, exist_ok=True)
     device = device_select()
-    train_loader, val_loader, in_ch, n_classes, classes = get_data(cfg.dataset, cfg.batch_size)
+    train_loader, val_loader, in_ch, n_classes, classes = get_data(
+        cfg.dataset, cfg.batch_size, cfg.num_workers
+    )
     model = SimpleCNN(in_ch=in_ch, n_classes=n_classes).to(device)
 
     best_path, best_val_acc, history = train_loop(

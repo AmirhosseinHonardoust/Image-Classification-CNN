@@ -18,7 +18,7 @@ dependencies = [
 
 [tool.setuptools]
 package-dir = {"" = "src"}
-py-modules = ["config", "model", "train_cnn", "evaluate", "utils"]
+py-modules = ["config", "model", "train_cnn", "evaluate", "utils", "class_names"]
 
 [tool.black]
 line-length = 100
@@ -36,6 +36,7 @@ python_version = "3.10"
 ignore_missing_imports = true
 warn_unused_ignores = true
 check_untyped_defs = true
+disallow_untyped_defs = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

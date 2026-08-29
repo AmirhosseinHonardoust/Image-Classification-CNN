@@ -147,6 +147,7 @@ image-classification-cnn/
 │   └── best_cnn.pth
 │
 ├── src/
+│   ├── class_names.py           # shared dataset label constants (e.g. CIFAR10)
 │   ├── config.py                # typed TrainConfig/EvalConfig + CLI/file/default merge
 │   ├── model.py                 # SimpleCNN architecture
 │   ├── train_cnn.py             # training script
@@ -155,8 +156,11 @@ image-classification-cnn/
 │
 ├── tests/                       # pytest suite for the modules above
 │
+├── .dockerignore
 ├── .gitignore
 ├── .pre-commit-config.yaml
+├── CONTRIBUTING.md
+├── Dockerfile
 ├── LICENSE
 ├── Makefile
 ├── pyproject.toml
@@ -260,6 +264,19 @@ outputs/confusion_matrix.png
 outputs/sample_predictions.png
 outputs/best_cnn.pth
 ```
+
+### Docker
+
+A `Dockerfile` is included for reproducible training without a local Python
+environment:
+
+```bash
+docker build -t image-classification-cnn .
+docker run --rm -v "$(pwd)/outputs:/app/outputs" image-classification-cnn
+```
+
+This runs `train_cnn.py --config train_config.example.json` by default; pass
+different args after the image name to override (e.g. `--dataset cifar10`).
 
 ---
 
