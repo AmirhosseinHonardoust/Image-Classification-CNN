@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "image-classification-cnn"
+version = "0.1.0"
+description = "CNN image classification (MNIST/CIFAR10) with PyTorch"
+requires-python = ">=3.10"
+dependencies = [
+    "torch==2.2.2",
+    "torchvision==0.17.2",
+    "numpy==1.26.4",
+    "matplotlib==3.8.4",
+    "scikit-learn==1.4.2",
+    "tqdm==4.66.4",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+py-modules = ["config", "model", "train_cnn", "evaluate", "utils"]
+
+[tool.black]
+line-length = 100
+target-version = ["py310"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "SIM", "UP"]
+
+[tool.mypy]
+python_version = "3.10"
+ignore_missing_imports = true
+warn_unused_ignores = true
+check_untyped_defs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
