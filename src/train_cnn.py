@@ -1,18 +1,26 @@
 import argparse
 import json
 import os
+import sys
 
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from config import TrainConfig, load_config_file
 from model import SimpleCNN
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 from tqdm import tqdm
-from utils import data_root, device_select, plot_curves, save_sample_predictions
+from utils import data_root, device_select, plot_curves, save_sample_predictions, setup_logging
+
+logger = setup_logging()
 
 
-def get_data(dataset, batch_size):
+def get_data(dataset: str, batch_size: int) -> tuple[DataLoader, DataLoader, int, int, list[str]]:
+    """Build train/val DataLoaders for the given dataset ('mnist' or 'cifar10').
+
+    Returns (train_loader, val_loader, in_channels, n_classes, class_names).
+    """
     root = data_root()
     if dataset.lower() == "mnist":
         transform_train = transforms.Compose(
@@ -48,12 +56,30 @@ def get_data(dataset, batch_size):
     return train_loader, val_loader, in_ch, n_classes, classes
 
 
-def accuracy(logits, y):
+def accuracy(logits: torch.Tensor, y: torch.Tensor) -> float:
+    """Fraction of predictions in `logits` (argmax over classes) matching `y`."""
     preds = logits.argmax(dim=1)
     return (preds == y).float().mean().item()
 
 
-def train_loop(model, train_loader, val_loader, device, epochs, outdir, lr=1e-3, patience=3):
+def train_loop(
+    model: nn.Module,
+    train_loader: DataLoader,
+    val_loader: DataLoader,
+    device: torch.device,
+    epochs: int,
+    outdir: str,
+    lr: float = 1e-3,
+    patience: int = 3,
+) -> tuple[str, float, dict[str, list[float]]]:
+    """Train `model` with early stopping on validation accuracy.
+
+    Saves the best checkpoint (by val_acc) to `outdir/best_cnn.pth`, a
+    sample-predictions image whenever the checkpoint improves, and a
+    training-curves plot at the end.
+
+    Returns (best_checkpoint_path, best_val_acc, history).
+    """
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=lr)
     best_val_acc = 0.0
@@ -119,37 +145,85 @@ def train_loop(model, train_loader, val_loader, device, epochs, outdir, lr=1e-3,
             )
         else:
             stale += 1
-        print(
-            f"[epoch {ep}] train_loss={train_loss:.4f} val_loss={val_loss:.4f} "
-            f"train_acc={train_acc:.4f} val_acc={val_acc:.4f}"
+        logger.info(
+            "[epoch %d] train_loss=%.4f val_loss=%.4f train_acc=%.4f val_acc=%.4f",
+            ep,
+            train_loss,
+            val_loss,
+            train_acc,
+            val_acc,
         )
         if stale >= patience:
-            print(f"Early stopping at epoch {ep}. Best val_acc={best_val_acc:.4f}")
+            logger.info("Early stopping at epoch %d. Best val_acc=%.4f", ep, best_val_acc)
             break
     plot_curves(history, os.path.join(outdir, "training_curves.png"))
     return best_path, best_val_acc, history
 
 
-def main():
+def build_config(args: argparse.Namespace) -> TrainConfig:
+    """Merge CLI args over an optional --config JSON file over TrainConfig defaults.
+
+    Precedence: explicit CLI flag > --config file value > TrainConfig default.
+    """
+    file_values = load_config_file(args.config)
+    defaults = TrainConfig()
+    return TrainConfig(
+        dataset=args.dataset or file_values.get("dataset", defaults.dataset),
+        epochs=(
+            args.epochs if args.epochs is not None else file_values.get("epochs", defaults.epochs)
+        ),
+        batch_size=(
+            args.batch_size
+            if args.batch_size is not None
+            else file_values.get("batch_size", defaults.batch_size)
+        ),
+        lr=args.lr if args.lr is not None else file_values.get("lr", defaults.lr),
+        outdir=args.outdir or file_values.get("outdir", defaults.outdir),
+        patience=(
+            args.patience
+            if args.patience is not None
+            else file_values.get("patience", defaults.patience)
+        ),
+    )
+
+
+def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--dataset", type=str, default="mnist", choices=["mnist", "cifar10"])
-    ap.add_argument("--epochs", type=int, default=10)
-    ap.add_argument("--batch-size", type=int, default=64)
-    ap.add_argument("--lr", type=float, default=1e-3)
-    ap.add_argument("--outdir", type=str, default="outputs")
+    ap.add_argument(
+        "--config", type=str, default=None, help="Optional JSON file overriding defaults below"
+    )
+    ap.add_argument("--dataset", type=str, default=None, choices=["mnist", "cifar10"])
+    ap.add_argument("--epochs", type=int, default=None)
+    ap.add_argument("--batch-size", type=int, default=None)
+    ap.add_argument("--lr", type=float, default=None)
+    ap.add_argument("--outdir", type=str, default=None)
+    ap.add_argument("--patience", type=int, default=None, help="Early-stopping patience (epochs)")
     args = ap.parse_args()
 
-    os.makedirs(args.outdir, exist_ok=True)
+    try:
+        cfg = build_config(args)
+    except ValueError as e:
+        logger.error("Invalid configuration: %s", e)
+        sys.exit(1)
+
+    os.makedirs(cfg.outdir, exist_ok=True)
     device = device_select()
-    train_loader, val_loader, in_ch, n_classes, classes = get_data(args.dataset, args.batch_size)
+    train_loader, val_loader, in_ch, n_classes, classes = get_data(cfg.dataset, cfg.batch_size)
     model = SimpleCNN(in_ch=in_ch, n_classes=n_classes).to(device)
 
     best_path, best_val_acc, history = train_loop(
-        model, train_loader, val_loader, device, args.epochs, args.outdir, lr=args.lr
+        model,
+        train_loader,
+        val_loader,
+        device,
+        cfg.epochs,
+        cfg.outdir,
+        lr=cfg.lr,
+        patience=cfg.patience,
     )
-    with open(os.path.join(args.outdir, "metrics.json"), "w") as f:
+    with open(os.path.join(cfg.outdir, "metrics.json"), "w") as f:
         json.dump({"best_val_acc": best_val_acc, "epochs": len(history["train_loss"])}, f, indent=2)
-    print(f"[OK] Training complete. Best model @ {best_path} (val_acc={best_val_acc:.4f})")
+    logger.info("[OK] Training complete. Best model @ %s (val_acc=%.4f)", best_path, best_val_acc)
 
 
 if __name__ == "__main__":

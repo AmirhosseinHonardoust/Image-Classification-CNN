@@ -65,6 +65,8 @@ pip install -r requirements.txt
 ```bash
 python src/train_cnn.py --dataset mnist --epochs 10 --batch-size 64 --outdir outputs
 ```
+Flags can also come from a JSON file via `--config train_config.example.json`; any
+flag passed explicitly on the CLI still overrides the file. See `train_config.example.json`.
 
 ## Evaluate
 ```bash
