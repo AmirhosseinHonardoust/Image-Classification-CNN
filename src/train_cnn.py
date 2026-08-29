@@ -5,11 +5,10 @@ import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from model import SimpleCNN
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 from tqdm import tqdm
-
-from model import SimpleCNN
 from utils import data_root, device_select, plot_curves, save_sample_predictions
 
 
