@@ -1,5 +1,5 @@
 <div align="center">
- 
+    
 # Image Classification with CNNs
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
