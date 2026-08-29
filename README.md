@@ -77,3 +77,15 @@ python src/evaluate.py --model outputs/best_cnn.pth --dataset mnist --outdir out
 - `outputs/confusion_matrix.png`
 - `outputs/sample_predictions.png`
 - `outputs/best_cnn.pth`
+
+`data/` and `outputs/` are generated locally (git-ignored) — `data/` is downloaded automatically by torchvision on first run, `outputs/` is written by `train_cnn.py` / `evaluate.py`.
+
+## Development
+```bash
+pip install -r requirements-dev.txt
+ruff check src tests
+black --check src tests
+mypy src
+pytest
+```
+CI (`.github/workflows/ci.yml`) runs the same checks on every push and pull request.
