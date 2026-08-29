@@ -1,5 +1,5 @@
 import torch
-from model import SimpleCNN
+from image_classification_cnn.model import SimpleCNN
 
 
 def test_mnist_forward_shape():

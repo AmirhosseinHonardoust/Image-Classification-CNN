@@ -8,5 +8,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 RUN pip install --no-cache-dir -e .
 
-ENTRYPOINT ["python", "src/train_cnn.py"]
+ENTRYPOINT ["train-cnn"]
 CMD ["--config", "train_config.example.json"]

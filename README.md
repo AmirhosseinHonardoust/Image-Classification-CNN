@@ -147,12 +147,14 @@ image-classification-cnn/
 │   └── best_cnn.pth
 │
 ├── src/
-│   ├── class_names.py           # shared dataset label constants (e.g. CIFAR10)
-│   ├── config.py                # typed TrainConfig/EvalConfig + CLI/file/default merge
-│   ├── model.py                 # SimpleCNN architecture
-│   ├── train_cnn.py             # training script
-│   ├── evaluate.py              # evaluation script
-│   └── utils.py                 # helper functions
+│   └── image_classification_cnn/
+│       ├── __init__.py
+│       ├── class_names.py       # shared dataset label constants (e.g. CIFAR10)
+│       ├── config.py            # typed TrainConfig/EvalConfig + CLI/file/default merge
+│       ├── model.py             # SimpleCNN architecture
+│       ├── train_cnn.py         # training script (also installed as `train-cnn`)
+│       ├── evaluate.py          # evaluation script (also installed as `evaluate-cnn`)
+│       └── utils.py             # helper functions
 │
 ├── tests/                       # pytest suite for the modules above
 │
@@ -201,7 +203,12 @@ source .venv/bin/activate
 
 ```bash
 pip install -r requirements.txt
+pip install -e .
 ```
+
+The `pip install -e .` step installs the `train-cnn` and `evaluate-cnn`
+console scripts used below (an editable install, so local code edits take
+effect immediately).
 
 For development tools (pytest, Ruff, Black, mypy):
 
@@ -216,13 +223,13 @@ pip install -r requirements-dev.txt
 Train the model:
 
 ```bash
-python src/train_cnn.py --dataset mnist --epochs 10 --batch-size 64 --outdir outputs
+train-cnn --dataset mnist --epochs 10 --batch-size 64 --outdir outputs
 ```
 
 Evaluate the trained checkpoint:
 
 ```bash
-python src/evaluate.py --model outputs/best_cnn.pth --dataset mnist --outdir outputs
+evaluate-cnn --model outputs/best_cnn.pth --dataset mnist --outdir outputs
 ```
 
 `data/` is downloaded automatically by torchvision on first run, and `outputs/` is written by the training and evaluation scripts. Both are git-ignored.
@@ -234,7 +241,7 @@ python src/evaluate.py --model outputs/best_cnn.pth --dataset mnist --outdir out
 The training script downloads MNIST if needed, builds the CNN, trains with early stopping, and writes the best checkpoint:
 
 ```bash
-python src/train_cnn.py \
+train-cnn \
   --dataset mnist \
   --epochs 10 \
   --batch-size 64 \
@@ -244,7 +251,7 @@ python src/train_cnn.py \
 Flags can also be supplied from a JSON file:
 
 ```bash
-python src/train_cnn.py --config train_config.example.json
+train-cnn --config train_config.example.json
 ```
 
 Any flag passed explicitly on the CLI still overrides the same key from the config file, which itself overrides the built-in defaults.
@@ -252,7 +259,7 @@ Any flag passed explicitly on the CLI still overrides the same key from the conf
 The evaluation script loads a saved checkpoint and reports metrics on the test split:
 
 ```bash
-python src/evaluate.py --model outputs/best_cnn.pth --dataset mnist --outdir outputs
+evaluate-cnn --model outputs/best_cnn.pth --dataset mnist --outdir outputs
 ```
 
 Generated outputs include:
@@ -441,11 +448,11 @@ The project separates responsibilities across modules:
 
 | Module | Purpose |
 |---|---|
-| `src/config.py` | Typed `TrainConfig` / `EvalConfig` and the defaults → file → CLI merge logic |
-| `src/model.py` | The `SimpleCNN` architecture |
-| `src/train_cnn.py` | Training loop, early stopping, checkpoint saving |
-| `src/evaluate.py` | Loads a checkpoint and computes test-set metrics and charts |
-| `src/utils.py` | Shared helper functions |
+| `src/image_classification_cnn/config.py` | Typed `TrainConfig` / `EvalConfig` and the defaults → file → CLI merge logic |
+| `src/image_classification_cnn/model.py` | The `SimpleCNN` architecture |
+| `src/image_classification_cnn/train_cnn.py` | Training loop, early stopping, checkpoint saving (installed as `train-cnn`) |
+| `src/image_classification_cnn/evaluate.py` | Loads a checkpoint and computes test-set metrics and charts (installed as `evaluate-cnn`) |
+| `src/image_classification_cnn/utils.py` | Shared helper functions |
 
 </div>
 

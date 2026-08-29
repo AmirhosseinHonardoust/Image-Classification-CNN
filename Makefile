@@ -25,7 +25,7 @@ check: lint
 	$(MAKE) test
 
 train:
-	python src/train_cnn.py --config train_config.example.json
+	train-cnn --config train_config.example.json
 
 evaluate:
-	python src/evaluate.py --model outputs/best_cnn.pth --dataset mnist --outdir outputs
+	evaluate-cnn --model outputs/best_cnn.pth --dataset mnist --outdir outputs

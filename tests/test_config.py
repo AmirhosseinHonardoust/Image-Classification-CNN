@@ -1,7 +1,7 @@
 import json
 
 import pytest
-from config import EvalConfig, TrainConfig, load_config_file
+from image_classification_cnn.config import EvalConfig, TrainConfig, load_config_file
 
 
 def test_train_config_defaults_match_original_argparse_defaults():

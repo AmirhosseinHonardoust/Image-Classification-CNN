@@ -2,7 +2,7 @@
 
 import torch
 import torch.nn as nn
-from evaluate import evaluate_model
+from image_classification_cnn.evaluate import evaluate_model
 from torch.utils.data import DataLoader, TensorDataset
 
 

@@ -16,9 +16,15 @@ dependencies = [
     "tqdm==4.66.4",
 ]
 
+[project.scripts]
+train-cnn = "image_classification_cnn.train_cnn:main"
+evaluate-cnn = "image_classification_cnn.evaluate:main"
+
 [tool.setuptools]
 package-dir = {"" = "src"}
-py-modules = ["config", "model", "train_cnn", "evaluate", "utils", "class_names"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [tool.black]
 line-length = 100
