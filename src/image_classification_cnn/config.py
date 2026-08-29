@@ -14,7 +14,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-VALID_DATASETS = ("mnist", "cifar10")
+from .datasets import VALID_DATASETS
+
+__all__ = ["EvalConfig", "TrainConfig", "VALID_DATASETS", "load_config_file"]
 
 
 @dataclass

@@ -1,8 +1,8 @@
-"""Shared, dataset-related constants used by both train_cnn.py and evaluate.py.
+"""Shared, dataset-related constants used by ``datasets.py``.
 
-Kept separate from train_cnn.py so evaluate.py doesn't need to import the
-training script (and its argparse/tqdm/optimizer imports and module-level
-logger setup) just to get the CIFAR10 class names.
+Kept separate so nothing needs to import train_cnn.py (and its
+argparse/tqdm/optimizer imports and module-level logger setup) just to get
+the CIFAR10 class names.
 """
 
 from __future__ import annotations

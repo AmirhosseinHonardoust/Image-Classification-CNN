@@ -7,10 +7,9 @@ import torch
 import torch.nn as nn
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 from torch.utils.data import DataLoader
-from torchvision import datasets, transforms
 
-from .class_names import CIFAR10_CLASSES
 from .config import EvalConfig, load_config_file
+from .datasets import build_loaders
 from .model import SimpleCNN
 from .utils import data_root, device_select, plot_confusion, setup_logging
 
@@ -19,26 +18,14 @@ logger = setup_logging()
 
 def get_test_loader(
     dataset: str, batch_size: int, num_workers: int = 2
-) -> tuple[DataLoader, int, list[str]]:
+) -> tuple[DataLoader, int, list[str], int]:
     """Build the test DataLoader for the given dataset ('mnist' or 'cifar10').
 
-    Returns (loader, in_channels, class_names).
+    Returns (loader, in_channels, class_names, img_size).
     """
     root = data_root()
-    if dataset.lower() == "mnist":
-        tfm = transforms.ToTensor()
-        ds = datasets.MNIST(root=root, train=False, download=True, transform=tfm)
-        in_ch, classes = 1, [str(i) for i in range(10)]
-    elif dataset.lower() == "cifar10":
-        tfm = transforms.ToTensor()
-        ds = datasets.CIFAR10(root=root, train=False, download=True, transform=tfm)
-        in_ch, classes = 3, CIFAR10_CLASSES
-    else:
-        raise ValueError("dataset must be 'mnist' or 'cifar10'")
-    loader = DataLoader(
-        ds, batch_size=batch_size, shuffle=False, num_workers=num_workers, pin_memory=True
-    )
-    return loader, in_ch, classes
+    loader, spec = build_loaders(dataset, root, batch_size, num_workers, train=False)
+    return loader, spec.in_ch, spec.class_names, spec.img_size
 
 
 def evaluate_model(
@@ -120,8 +107,8 @@ def main() -> None:
     os.makedirs(cfg.outdir, exist_ok=True)
     device = device_select()
 
-    loader, in_ch, classes = get_test_loader(cfg.dataset, cfg.batch_size, cfg.num_workers)
-    model = SimpleCNN(in_ch=in_ch, n_classes=len(classes)).to(device)
+    loader, in_ch, classes, img_size = get_test_loader(cfg.dataset, cfg.batch_size, cfg.num_workers)
+    model = SimpleCNN(in_ch=in_ch, n_classes=len(classes), img_size=img_size).to(device)
     state = torch.load(cfg.model, map_location=device, weights_only=True)
     model.load_state_dict(
         state["model_state"] if isinstance(state, dict) and "model_state" in state else state
