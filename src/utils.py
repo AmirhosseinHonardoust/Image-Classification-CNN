@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -5,7 +6,24 @@ import torch
 from sklearn.metrics import ConfusionMatrixDisplay, confusion_matrix
 
 
+def setup_logging(level: int = logging.INFO) -> logging.Logger:
+    """Configure a simple console logger and return the caller's logger.
+
+    Safe to call multiple times (e.g. from both a script and its tests):
+    handlers are only attached to the root logger once.
+    """
+    root = logging.getLogger()
+    if not root.handlers:
+        logging.basicConfig(
+            level=level, format="%(asctime)s [%(levelname)s] %(message)s", datefmt="%H:%M:%S"
+        )
+    else:
+        root.setLevel(level)
+    return logging.getLogger("cnn")
+
+
 def device_select() -> torch.device:
+    """Return CUDA if available, else CPU."""
     return torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
@@ -20,7 +38,8 @@ def data_root() -> str:
     return str(Path(__file__).resolve().parent.parent / "data")
 
 
-def plot_curves(history, outpath):
+def plot_curves(history: dict[str, list[float]], outpath: str) -> None:
+    """Plot train/val loss curves from a history dict and save to outpath."""
     fig, ax = plt.subplots(1, 1, figsize=(7, 5))
     ax.plot(history["train_loss"], label="train_loss")
     ax.plot(history["val_loss"], label="val_loss")
@@ -33,7 +52,8 @@ def plot_curves(history, outpath):
     plt.close(fig)
 
 
-def plot_confusion(y_true, y_pred, classes, outpath):
+def plot_confusion(y_true: list[int], y_pred: list[int], classes: list[str], outpath: str) -> None:
+    """Compute and save a confusion matrix plot for the given predictions."""
     cm = confusion_matrix(y_true, y_pred, labels=list(range(len(classes))))
     fig, ax = plt.subplots(figsize=(6, 6))
     disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=classes)
@@ -44,7 +64,15 @@ def plot_confusion(y_true, y_pred, classes, outpath):
     plt.close(fig)
 
 
-def save_sample_predictions(images, labels, preds, classes, outpath, max_n=16):
+def save_sample_predictions(
+    images: torch.Tensor,
+    labels: torch.Tensor,
+    preds: torch.Tensor,
+    classes: list[str],
+    outpath: str,
+    max_n: int = 16,
+) -> None:
+    """Save a grid of sample images with their true/predicted labels as a title."""
     import torchvision
 
     n = min(len(images), max_n)
