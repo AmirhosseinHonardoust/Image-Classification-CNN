@@ -26,6 +26,9 @@ package-dir = {"" = "src"}
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+image_classification_cnn = ["py.typed"]
+
 [tool.black]
 line-length = 100
 target-version = ["py310"]
@@ -46,3 +49,8 @@ disallow_untyped_defs = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+addopts = "--cov=image_classification_cnn --cov-report=term-missing"
+
+[tool.coverage.run]
+source = ["image_classification_cnn"]
+branch = true

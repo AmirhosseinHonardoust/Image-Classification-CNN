@@ -409,7 +409,7 @@ Evaluation runs on the standard MNIST test split, held out from training.
 
 ## Testing and CI
 
-Run unit tests locally:
+Run unit tests locally (this also prints a coverage report, configured in `pyproject.toml`):
 
 ```bash
 pytest
@@ -449,6 +449,7 @@ The project separates responsibilities across modules:
 | Module | Purpose |
 |---|---|
 | `src/image_classification_cnn/config.py` | Typed `TrainConfig` / `EvalConfig` and the defaults → file → CLI merge logic |
+| `src/image_classification_cnn/datasets.py` | Single source of truth for supported datasets (torchvision class, channels, image size, transforms) |
 | `src/image_classification_cnn/model.py` | The `SimpleCNN` architecture |
 | `src/image_classification_cnn/train_cnn.py` | Training loop, early stopping, checkpoint saving (installed as `train-cnn`) |
 | `src/image_classification_cnn/evaluate.py` | Loads a checkpoint and computes test-set metrics and charts (installed as `evaluate-cnn`) |
@@ -456,7 +457,7 @@ The project separates responsibilities across modules:
 
 </div>
 
-Tooling is configured through `pyproject.toml` (Ruff, Black, mypy, pytest) and `requirements-dev.txt`. Optional pre-commit hooks (`.pre-commit-config.yaml`) run the same linting, formatting, and type checks automatically before each commit:
+Tooling is configured through `pyproject.toml` (Ruff, Black, mypy, pytest) and `requirements-dev.txt`. The package ships a `py.typed` marker (PEP 561), so downstream projects that import it get type-checking support too. Optional pre-commit hooks (`.pre-commit-config.yaml`) run the same linting, formatting, and type checks automatically before each commit:
 
 ```bash
 pip install pre-commit

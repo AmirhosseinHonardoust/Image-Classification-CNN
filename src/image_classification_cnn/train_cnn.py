@@ -7,11 +7,10 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
-from torchvision import datasets, transforms
 from tqdm import tqdm
 
-from .class_names import CIFAR10_CLASSES
 from .config import TrainConfig, load_config_file
+from .datasets import build_loaders
 from .model import SimpleCNN
 from .utils import data_root, device_select, plot_curves, save_sample_predictions, setup_logging
 
@@ -20,46 +19,22 @@ logger = setup_logging()
 
 def get_data(
     dataset: str, batch_size: int, num_workers: int = 2
-) -> tuple[DataLoader, DataLoader, int, int, list[str]]:
+) -> tuple[DataLoader, DataLoader, int, int, list[str], int]:
     """Build train/val DataLoaders for the given dataset ('mnist' or 'cifar10').
 
-    Returns (train_loader, val_loader, in_channels, n_classes, class_names).
+    Returns (train_loader, val_loader, in_channels, n_classes, class_names, img_size).
     """
     root = data_root()
-    if dataset.lower() == "mnist":
-        transform_train = transforms.Compose(
-            [
-                transforms.ToTensor(),
-            ]
-        )
-        transform_test = transforms.Compose([transforms.ToTensor()])
-        train_ds = datasets.MNIST(root=root, train=True, download=True, transform=transform_train)
-        test_ds = datasets.MNIST(root=root, train=False, download=True, transform=transform_test)
-        in_ch, n_classes = 1, 10
-    elif dataset.lower() == "cifar10":
-        transform_train = transforms.Compose(
-            [
-                transforms.RandomCrop(32, padding=4),
-                transforms.RandomHorizontalFlip(),
-                transforms.ToTensor(),
-            ]
-        )
-        transform_test = transforms.Compose([transforms.ToTensor()])
-        train_ds = datasets.CIFAR10(root=root, train=True, download=True, transform=transform_train)
-        test_ds = datasets.CIFAR10(root=root, train=False, download=True, transform=transform_test)
-        in_ch, n_classes = 3, 10
-    else:
-        raise ValueError("dataset must be 'mnist' or 'cifar10'")
-    train_loader = DataLoader(
-        train_ds, batch_size=batch_size, shuffle=True, num_workers=num_workers, pin_memory=True
+    train_loader, spec = build_loaders(dataset, root, batch_size, num_workers, train=True)
+    val_loader, _ = build_loaders(dataset, root, batch_size, num_workers, train=False)
+    return (
+        train_loader,
+        val_loader,
+        spec.in_ch,
+        len(spec.class_names),
+        spec.class_names,
+        spec.img_size,
     )
-    val_loader = DataLoader(
-        test_ds, batch_size=batch_size, shuffle=False, num_workers=num_workers, pin_memory=True
-    )
-    classes = (
-        CIFAR10_CLASSES if dataset.lower() == "cifar10" else [str(i) for i in range(n_classes)]
-    )
-    return train_loader, val_loader, in_ch, n_classes, classes
 
 
 def accuracy(logits: torch.Tensor, y: torch.Tensor) -> float:
@@ -233,10 +208,10 @@ def main() -> None:
 
     os.makedirs(cfg.outdir, exist_ok=True)
     device = device_select()
-    train_loader, val_loader, in_ch, n_classes, classes = get_data(
+    train_loader, val_loader, in_ch, n_classes, classes, img_size = get_data(
         cfg.dataset, cfg.batch_size, cfg.num_workers
     )
-    model = SimpleCNN(in_ch=in_ch, n_classes=n_classes).to(device)
+    model = SimpleCNN(in_ch=in_ch, n_classes=n_classes, img_size=img_size).to(device)
 
     best_path, best_val_acc, history = train_loop(
         model,
