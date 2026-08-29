@@ -1,15 +1,9 @@
 """Tests for evaluate.evaluate_model against synthetic data with known predictions."""
 
-import sys
-from pathlib import Path
-
 import torch
 import torch.nn as nn
+from evaluate import evaluate_model
 from torch.utils.data import DataLoader, TensorDataset
-
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
-
-from evaluate import evaluate_model  # noqa: E402
 
 
 class _PerfectClassifier(nn.Module):

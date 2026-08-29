@@ -1,12 +1,7 @@
 import json
-import sys
-from pathlib import Path
 
 import pytest
-
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
-
-from config import EvalConfig, TrainConfig, load_config_file  # noqa: E402
+from config import EvalConfig, TrainConfig, load_config_file
 
 
 def test_train_config_defaults_match_original_argparse_defaults():

@@ -10,6 +10,7 @@ from model import SimpleCNN
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
+from train_cnn import CIFAR10_CLASSES
 from utils import data_root, device_select, plot_confusion, setup_logging
 
 logger = setup_logging()
@@ -28,7 +29,7 @@ def get_test_loader(dataset: str, batch_size: int) -> tuple[DataLoader, int, lis
     elif dataset.lower() == "cifar10":
         tfm = transforms.ToTensor()
         ds = datasets.CIFAR10(root=root, train=False, download=True, transform=tfm)
-        in_ch, classes = 3, [str(i) for i in range(10)]
+        in_ch, classes = 3, CIFAR10_CLASSES
     else:
         raise ValueError("dataset must be 'mnist' or 'cifar10'")
     loader = DataLoader(ds, batch_size=batch_size, shuffle=False, num_workers=2, pin_memory=True)
