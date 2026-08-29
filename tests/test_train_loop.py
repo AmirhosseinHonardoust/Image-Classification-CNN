@@ -5,16 +5,13 @@ offline, but exercises the exact training/validation/checkpoint/early-stop
 code path used in production.
 """
 
-import sys
 from pathlib import Path
 
 import torch
+import train_cnn
+from model import SimpleCNN
 from torch.utils.data import DataLoader, TensorDataset
-
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
-
-from model import SimpleCNN  # noqa: E402
-from train_cnn import train_loop  # noqa: E402
+from train_cnn import train_loop
 
 
 def _make_loader(n: int, in_ch: int, size: int, n_classes: int, batch_size: int = 8) -> DataLoader:
@@ -83,3 +80,51 @@ def test_train_loop_deterministic_with_fixed_seed(tmp_path):
     history_a = run(str(out_a))
     history_b = run(str(out_b))
     assert history_a == history_b
+
+
+def test_train_loop_passes_provided_classes_to_sample_predictions(tmp_path, monkeypatch):
+    """An explicit `classes` list reaches save_sample_predictions unchanged."""
+    captured = {}
+
+    def fake_save_sample_predictions(images, labels, preds, classes, outpath, max_n=16):
+        captured["classes"] = classes
+
+    monkeypatch.setattr(train_cnn, "save_sample_predictions", fake_save_sample_predictions)
+    torch.manual_seed(0)
+    train_loader = _make_loader(n=16, in_ch=1, size=28, n_classes=4)
+    # A large-enough val set makes "0 correct out of N" astronomically unlikely,
+    # so the checkpoint (and sample-predictions save) reliably fires this epoch.
+    val_loader = _make_loader(n=64, in_ch=1, size=28, n_classes=4)
+    model = SimpleCNN(in_ch=1, n_classes=4)
+
+    train_loop(
+        model,
+        train_loader,
+        val_loader,
+        torch.device("cpu"),
+        epochs=1,
+        outdir=str(tmp_path),
+        classes=["a", "b", "c", "d"],
+    )
+
+    assert captured["classes"] == ["a", "b", "c", "d"]
+
+
+def test_train_loop_default_classes_match_model_n_classes(tmp_path, monkeypatch):
+    """Without an explicit `classes` list, sample-prediction labels should match
+    the model's actual class count (regression guard: this used to be hardcoded
+    to range(10), which silently mislabeled any model with n_classes != 10)."""
+    captured = {}
+
+    def fake_save_sample_predictions(images, labels, preds, classes, outpath, max_n=16):
+        captured["classes"] = classes
+
+    monkeypatch.setattr(train_cnn, "save_sample_predictions", fake_save_sample_predictions)
+    torch.manual_seed(0)
+    train_loader = _make_loader(n=16, in_ch=1, size=28, n_classes=4)
+    val_loader = _make_loader(n=64, in_ch=1, size=28, n_classes=4)
+    model = SimpleCNN(in_ch=1, n_classes=4)
+
+    train_loop(model, train_loader, val_loader, torch.device("cpu"), epochs=1, outdir=str(tmp_path))
+
+    assert captured["classes"] == ["0", "1", "2", "3"]

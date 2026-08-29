@@ -1,4 +1,6 @@
 # Image Classification with CNNs
+[![CI](https://github.com/AmirhosseinHonardoust/Image-Classification-CNN/actions/workflows/ci.yml/badge.svg)](https://github.com/AmirhosseinHonardoust/Image-Classification-CNN/actions/workflows/ci.yml)
+
 Image classification with PyTorch using Convolutional Neural Networks (CNNs). Trains on MNIST with convolution, pooling, and fully connected layers. Achieves over 99% accuracy with early stopping and checkpoints. Includes training/evaluation scripts, metrics, confusion matrix, training curves, and sample prediction visualizations.
 
 This project implements a Convolutional Neural Network (CNN) using **PyTorch** to classify handwritten digits from the MNIST dataset. The model achieves over **99% accuracy** and includes training scripts, evaluation, and visualizations.
@@ -37,12 +39,19 @@ This project implements a Convolutional Neural Network (CNN) using **PyTorch** t
 image-classification-cnn/
 ├─ README.md
 ├─ LICENSE
+├─ pyproject.toml       # packaging + ruff/black/mypy/pytest config
 ├─ requirements.txt
-├─ data/                # auto-downloaded MNIST dataset
+├─ requirements-dev.txt
+├─ train_config.example.json
+├─ .github/workflows/ci.yml
+├─ data/                # auto-downloaded MNIST/CIFAR10 dataset
 ├─ src/
+│  ├─ config.py         # typed TrainConfig/EvalConfig + CLI/file/default merge
+│  ├─ model.py          # SimpleCNN architecture
 │  ├─ train_cnn.py      # training script
 │  ├─ evaluate.py       # evaluation script
 │  └─ utils.py          # helper functions
+├─ tests/               # pytest suite for the above
 └─ outputs/
    ├─ metrics.json
    ├─ confusion_matrix.png
@@ -85,9 +94,15 @@ python src/evaluate.py --model outputs/best_cnn.pth --dataset mnist --outdir out
 ## Development
 ```bash
 pip install -r requirements-dev.txt
+pip install -e .          # installs src/*.py as importable modules (config, model, ...)
 ruff check src tests
 black --check src tests
 mypy src
 pytest
 ```
+Or via `make check` (see `Makefile` for individual `lint`/`format`/`typecheck`/`test` targets).
+
+Optionally, install the pre-commit hooks (`pip install pre-commit && pre-commit install`) to
+run ruff/black/mypy automatically before each commit — same checks as CI, just earlier.
+
 CI (`.github/workflows/ci.yml`) runs the same checks on every push and pull request.

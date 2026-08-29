@@ -15,6 +15,19 @@ from utils import data_root, device_select, plot_curves, save_sample_predictions
 
 logger = setup_logging()
 
+CIFAR10_CLASSES = [
+    "airplane",
+    "automobile",
+    "bird",
+    "cat",
+    "deer",
+    "dog",
+    "frog",
+    "horse",
+    "ship",
+    "truck",
+]
+
 
 def get_data(dataset: str, batch_size: int) -> tuple[DataLoader, DataLoader, int, int, list[str]]:
     """Build train/val DataLoaders for the given dataset ('mnist' or 'cifar10').
@@ -52,7 +65,9 @@ def get_data(dataset: str, batch_size: int) -> tuple[DataLoader, DataLoader, int
     val_loader = DataLoader(
         test_ds, batch_size=batch_size, shuffle=False, num_workers=2, pin_memory=True
     )
-    classes = [str(i) for i in range(n_classes)]
+    classes = (
+        CIFAR10_CLASSES if dataset.lower() == "cifar10" else [str(i) for i in range(n_classes)]
+    )
     return train_loader, val_loader, in_ch, n_classes, classes
 
 
@@ -71,12 +86,17 @@ def train_loop(
     outdir: str,
     lr: float = 1e-3,
     patience: int = 3,
+    classes: list[str] | None = None,
 ) -> tuple[str, float, dict[str, list[float]]]:
     """Train `model` with early stopping on validation accuracy.
 
     Saves the best checkpoint (by val_acc) to `outdir/best_cnn.pth`, a
     sample-predictions image whenever the checkpoint improves, and a
     training-curves plot at the end.
+
+    `classes` labels the sample-predictions image. If omitted, digit
+    strings ("0", "1", ...) sized to the model's actual output classes
+    are used instead.
 
     Returns (best_checkpoint_path, best_val_acc, history).
     """
@@ -111,6 +131,7 @@ def train_loop(
         first_batch_imgs: torch.Tensor | None = None
         first_batch_lbls: torch.Tensor | None = None
         first_batch_preds: torch.Tensor | None = None
+        first_batch_n_classes = 0
         with torch.no_grad():
             for i, (x, y) in enumerate(tqdm(val_loader, desc=f"Epoch {ep}/{epochs} [val]")):
                 x, y = x.to(device), y.to(device)
@@ -123,6 +144,7 @@ def train_loop(
                     first_batch_imgs = x.clone()
                     first_batch_lbls = y.clone()
                     first_batch_preds = logits.argmax(1).clone()
+                    first_batch_n_classes = logits.size(1)
         val_loss = vloss / vn
         val_acc = vacc / vn
         history["train_loss"].append(train_loss)
@@ -140,7 +162,11 @@ def train_loop(
                 first_batch_imgs.cpu(),
                 first_batch_lbls.cpu(),
                 first_batch_preds.cpu(),
-                classes=[str(i) for i in range(10)],
+                classes=(
+                    classes
+                    if classes is not None
+                    else [str(i) for i in range(first_batch_n_classes)]
+                ),
                 outpath=os.path.join(outdir, "sample_predictions.png"),
             )
         else:
@@ -220,6 +246,7 @@ def main() -> None:
         cfg.outdir,
         lr=cfg.lr,
         patience=cfg.patience,
+        classes=classes,
     )
     with open(os.path.join(cfg.outdir, "metrics.json"), "w") as f:
         json.dump({"best_val_acc": best_val_acc, "epochs": len(history["train_loss"])}, f, indent=2)
