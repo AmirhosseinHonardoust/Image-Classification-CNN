@@ -3,11 +3,10 @@ import json
 import os
 
 import torch
+from model import SimpleCNN
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
-
-from model import SimpleCNN
 from utils import data_root, device_select, plot_confusion
 
 
