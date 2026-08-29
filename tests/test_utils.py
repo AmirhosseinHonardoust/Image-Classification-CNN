@@ -5,8 +5,13 @@ import matplotlib
 matplotlib.use("Agg")  # headless backend for CI
 
 import torch  # noqa: E402
-from train_cnn import accuracy
-from utils import data_root, device_select, plot_confusion, plot_curves
+from image_classification_cnn.train_cnn import accuracy  # noqa: E402
+from image_classification_cnn.utils import (  # noqa: E402
+    data_root,
+    device_select,
+    plot_confusion,
+    plot_curves,
+)
 
 
 def test_device_select_returns_torch_device():

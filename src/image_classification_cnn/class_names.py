@@ -3,9 +3,6 @@
 Kept separate from train_cnn.py so evaluate.py doesn't need to import the
 training script (and its argparse/tqdm/optimizer imports and module-level
 logger setup) just to get the CIFAR10 class names.
-
-Named ``class_names`` rather than ``datasets`` to avoid colliding with the
-``from torchvision import datasets`` import used in train_cnn.py/evaluate.py.
 """
 
 from __future__ import annotations

@@ -3,8 +3,7 @@
 import argparse
 import json
 
-import evaluate
-import train_cnn
+from image_classification_cnn import evaluate, train_cnn
 
 
 def _train_args(**overrides):

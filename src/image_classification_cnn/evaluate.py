@@ -5,13 +5,14 @@ import sys
 
 import torch
 import torch.nn as nn
-from class_names import CIFAR10_CLASSES
-from config import EvalConfig, load_config_file
-from model import SimpleCNN
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
-from utils import data_root, device_select, plot_confusion, setup_logging
+
+from .class_names import CIFAR10_CLASSES
+from .config import EvalConfig, load_config_file
+from .model import SimpleCNN
+from .utils import data_root, device_select, plot_confusion, setup_logging
 
 logger = setup_logging()
 

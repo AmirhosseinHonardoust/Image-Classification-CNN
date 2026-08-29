@@ -30,12 +30,12 @@ def device_select() -> torch.device:
 def data_root() -> str:
     """Absolute path to the repo's ``data/`` dir, regardless of CWD.
 
-    Resolved relative to this file (``src/utils.py``) rather than the
-    current working directory, so training/eval work the same whether
-    invoked as ``python src/train_cnn.py`` from the repo root or from
-    inside ``src/``.
+    Resolved relative to this file (``src/image_classification_cnn/utils.py``)
+    rather than the current working directory, so training/eval work the same
+    whether invoked as ``python -m image_classification_cnn.train_cnn`` from
+    the repo root or via the installed console script from anywhere.
     """
-    return str(Path(__file__).resolve().parent.parent / "data")
+    return str(Path(__file__).resolve().parent.parent.parent / "data")
 
 
 def plot_curves(history: dict[str, list[float]], outpath: str) -> None:

@@ -8,10 +8,10 @@ code path used in production.
 from pathlib import Path
 
 import torch
-import train_cnn
-from model import SimpleCNN
+from image_classification_cnn import train_cnn
+from image_classification_cnn.model import SimpleCNN
+from image_classification_cnn.train_cnn import train_loop
 from torch.utils.data import DataLoader, TensorDataset
-from train_cnn import train_loop
 
 
 def _make_loader(n: int, in_ch: int, size: int, n_classes: int, batch_size: int = 8) -> DataLoader:
